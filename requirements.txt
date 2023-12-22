@@ -14,5 +14,5 @@ ensure
 types-pyYAML
 Flask
 Flask-Cors 
-
+python-box
 -e .
