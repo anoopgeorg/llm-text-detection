@@ -4,4 +4,15 @@ numpy
 tqdm
 tensorflow
 scikit-learn
+xgboost
+spacy
+seaborn
+matplotlib
+mlflow
+pyYAML
+ensure
+types-pyYAML
+Flask
+Flask-Cors 
+
 -e .

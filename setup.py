@@ -2,6 +2,11 @@ from setuptools import find_packages, setup
 from typing import List
 
 HYPHEN_E_DOT = "-e ."
+__version__ = "0.0.1"
+REPO_NAME = "llm-text-detection"
+AUTHOR_USER_NAME = "anoopgeorg"
+SRC_REPO = "llm-text-detection"
+AUTHOR_EMAIL = "anoopgeorge1126@gmail.com"
 
 
 def getRequirements(file_path: str) -> List[str]:
@@ -18,10 +23,11 @@ def getRequirements(file_path: str) -> List[str]:
 
 
 setup(
-    name="llm-text-detection",
-    version="0.0.1",
-    author="Anoop George",
-    author_email="anoopgeorge1126@gmail.com",
+    name=SRC_REPO,
+    version=__version__,
+    author=AUTHOR_USER_NAME,
+    author_email=AUTHOR_EMAIL,
     packages=find_packages(),
     install_requires=getRequirements("requirements.txt"),
+    url=f"https://github.com/{AUTHOR_USER_NAME}/{REPO_NAME}",
 )
