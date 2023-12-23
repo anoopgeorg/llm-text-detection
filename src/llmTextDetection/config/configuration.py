@@ -8,6 +8,7 @@ from src.llmTextDetection import logger, logflow
 from src.llmTextDetection.entity.config_entity import (
     DataIngestionConfig,
     ModelParameters,
+    TrainerConfig,
 )
 
 
@@ -81,3 +82,20 @@ class configManager:
             strategy=strategy,
         )
         return model_parameters
+
+    @logflow
+    def getTrainerConfig(self) -> TrainerConfig:
+        config = self.config.model_trainer
+        create_directory(
+            [
+                config.root_dir,
+                config.model_path,
+                config.vectorizer_path,
+            ]
+        )
+        trainer_config = TrainerConfig(
+            model_path=Path(config.model_path),
+            root_dir=Path(config.root_dir),
+            vectorizer_path=Path(config.vectorizer_path),
+        )
+        return trainer_config

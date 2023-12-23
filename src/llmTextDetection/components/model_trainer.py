@@ -1,36 +1,37 @@
-import time
+import tensorflow as tf
+import pandas as pd
 from ensure import ensure_annotations
 from keras.layers import (
     Dense,
-    LSTM,
-    TextVectorization,
     Embedding,
-    BatchNormalization,
     Input,
     Conv1D,
     MaxPool1D,
     Flatten,
     Dropout,
+    TextVectorization,
 )
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.losses import binary_crossentropy
 from keras.metrics import AUC
-import tensorflow as tf
-import pandas as pd
+from pathlib import Path
+
 
 from src.llmTextDetection import logger, logflow
 from src.llmTextDetection.entity.config_entity import (
-    DataIngestionConfig,
     ModelParameters,
+    TrainerConfig,
 )
 
 
 class ModelTrainer:
-    def __init__(self, params: ModelParameters):
-        self.ruind = f"run_{time.strftime('%Y%m%d_%H%M%S')}"
-        logger.info(f"ModelTrainer initialized with ruind: {self.ruind} ")
+    def __init__(
+        self, params: ModelParameters, trainer_config: TrainerConfig, runid: str = None
+    ):
+        logger.info(f"ModelTrainer initialized with ruind: {runid} ")
         self.params = params
+        self.trainer_config = trainer_config
 
     @logflow
     @ensure_annotations
@@ -59,14 +60,14 @@ class ModelTrainer:
 
     @logflow
     @ensure_annotations
-    def trainModel(
+    def train(
         self,
         model: Model,
         train_ds: tf.data.Dataset,
         train_df: pd.DataFrame,
         valid_ds: tf.data.Dataset,
         valid_df: pd.DataFrame,
-    ):
+    ) -> Model:
         with self.params.strategy.scope():
             model = self.buildModel()
             model.fit(
@@ -76,3 +77,52 @@ class ModelTrainer:
                 steps_per_epoch=(len(train_df) // self.params.batch_size),
                 validation_steps=(len(valid_df) // self.params.batch_size),
             )
+            return model
+
+    @logflow
+    @ensure_annotations
+    def saveModel(model: Model, path: Path):
+        try:
+            model.save(str(path))
+            return True
+        except Exception as e:
+            logger.exception(e)
+
+    @logflow
+    @ensure_annotations
+    def loadModel(path: Path, file_name: str = None) -> Model:
+        try:
+            if file_name is None:
+                model = tf.keras.models.load_model(str(path))
+                return model
+            else:
+                model = tf.keras.models.load_model(str(path / file_name))
+                return model
+        except Exception as e:
+            logger.exception(e)
+
+    @logflow
+    # @ensure_annotations
+    def saveVectorizer(vectorizer, path: Path):
+        type(vectorizer)
+        try:
+            vectorizer.save_assets(str(path))
+            return True
+        except Exception as e:
+            logger.exception(e)
+
+    @logflow
+    @ensure_annotations
+    def loadVectorizer(path: Path, file_name: str = None) -> TextVectorization:
+        try:
+            if file_name is not None:
+                vectorizer = tf.keras.layers.TextVectorization.load_assets(str(path))
+                return vectorizer
+            else:
+                vectorizer = tf.keras.layers.TextVectorization.load_assets(
+                    str(path / file_name)
+                )
+                return vectorizer
+
+        except Exception as e:
+            logger.exception(e)

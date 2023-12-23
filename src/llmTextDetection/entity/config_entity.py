@@ -30,3 +30,10 @@ class ModelParameters:
     epochs: int
     device: str
     strategy: tf.distribute.Strategy
+
+
+@dataclass(frozen=True)
+class TrainerConfig:
+    root_dir: Path
+    vectorizer_path: Path
+    model_path: Path

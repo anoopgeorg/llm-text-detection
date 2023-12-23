@@ -24,7 +24,8 @@ class DataLoader:
     def getTrainDataset(self) -> tuple:
         train = True
         train_df = self.data_ingest.loadData(train=train)
-        train_df = self.data_ingest.getStratifiedData(train)
+        print(len(train_df))
+        train_df = self.data_ingest.getStratifiedData(train_df)
         (
             (train_ds, train_df),
             (validation_ds, validation_df),

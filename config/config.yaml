@@ -7,4 +7,8 @@ data_ingestion:
   test_data_path: artifacts/data_ingestion/test_data
   raw_train_data_path: src/llmTextDetection/data/train
   raw_test_data_path: src/llmTextDetection/data/test
-  
+
+model_trainer:
+    root_dir: artifacts/model_trainer
+    vectorizer_path: artifacts/model_trainer/vectorizers
+    model_path: artifacts/model_trainer/models

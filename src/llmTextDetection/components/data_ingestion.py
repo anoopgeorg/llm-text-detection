@@ -74,7 +74,7 @@ class DataIngestion:
 
     @logflow
     @ensure_annotations
-    def getRegexExclusions(self, df: pd.DataFrame) -> (str, re.Pattern, re.Pattern):
+    def getRegexExclusions(self, df: pd.DataFrame) -> tuple:
         # Get list of charcters missing from the human data
         human_df = df[df["label_name"] == self.params.class_names[0]].copy()  # Human
         ai_df = df[df["label_name"] == self.params.class_names[1]].copy()  # AI
@@ -85,7 +85,7 @@ class DataIngestion:
         caracter_exclusion = "".join(
             [x for x in ai_characters if x not in human_characters]
         )
-        logger.info(caracter_exclusion)
+        # logger.info(caracter_exclusion)
         caracter_escape = re.escape(caracter_exclusion)
         char_excl_regex = f"[{caracter_escape}]"
 
@@ -117,8 +117,9 @@ class DataIngestion:
 
         # Regex pattern for excluding html tags
         html_exclude = re.compile(r"<.*?>")
+        html_pattern = html_exclude.pattern
 
-        return (char_excl_regex, regex_pattern, html_exclude)
+        return (char_excl_regex, regex_pattern, html_pattern)
 
     def standardizeText(self, input_data):
         if (
@@ -135,13 +136,13 @@ class DataIngestion:
     @logflow
     @ensure_annotations
     # Preprocessing and vectorization of text
-    def buildVectorizationLayer(self, texts: pd.DataFrame):
+    def buildVectorizationLayer(self, texts: list, df: pd.DataFrame):
         # Get Regex patterns
         (
             self.char_excl_regex,
             self.regex_pattern,
             self.html_exclude,
-        ) = self.getRegexExclusions(texts)
+        ) = self.getRegexExclusions(df)
 
         vectorization_layer = TextVectorization(
             standardize=self.standardizeText,
@@ -195,7 +196,7 @@ class DataIngestion:
             train_labels = train_df["label"].to_list()
 
             # Vectorize the text based on training data
-            vectorizer = self.buildVectorizationLayer(train_text)
+            vectorizer = self.buildVectorizationLayer(train_text, train_df)
 
             train_ds = self.buildDataset(
                 train_text,

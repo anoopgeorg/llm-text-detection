@@ -1,13 +1,14 @@
 import os
 import yaml
 import json
+import pickle
 from box.exceptions import BoxValueError
 from ensure import ensure_annotations
 from box import ConfigBox
 from pathlib import Path
 from typing import Any
 
-from src.llmTextDetection import logger
+from src.llmTextDetection import logger, logflow
 
 
 @ensure_annotations
@@ -28,6 +29,14 @@ def read_yaml(path: Path) -> ConfigBox:
         raise ValueError("yaml file is empty")
     except Exception as e:
         raise e
+
+
+@logflow
+def savePickle(obj, path):
+    # Save the object using pickle.dump
+    with open(path, "wb") as file:
+        pickle.dump(obj, file)
+        return True
 
 
 @ensure_annotations
