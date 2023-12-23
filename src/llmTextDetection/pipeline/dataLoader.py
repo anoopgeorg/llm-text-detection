@@ -3,6 +3,7 @@ from src.llmTextDetection.components.data_ingestion import DataIngestion
 from src.llmTextDetection import logger, logflow
 
 import time
+import tensorflow as tf
 from ensure import ensure_annotations
 from keras.layers import TextVectorization
 
@@ -30,7 +31,7 @@ class DataLoader:
             vectorizer,
         ) = self.data_ingest.getDataset(1, train, train_df)
 
-        return (train_ds, validation_ds, vectorizer)
+        return (train_ds, train_df, validation_ds, validation_df, vectorizer)
 
     @logflow
     @ensure_annotations

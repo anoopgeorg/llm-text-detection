@@ -17,7 +17,7 @@ from keras.optimizers import Adam
 from keras.losses import binary_crossentropy
 from keras.metrics import AUC
 import tensorflow as tf
-import mlflow
+import pandas as pd
 
 from src.llmTextDetection import logger, logflow
 from src.llmTextDetection.entity.config_entity import (
@@ -57,8 +57,22 @@ class ModelTrainer:
         )
         return model
 
-    # @logflow
-    # @ensure_annotations
-    # def trainModel(self, model: Model, train_dataset: tf.data.Dataset):
-    #     with self.params.strategy.scope():
-    #         model = self.buildModel()
+    @logflow
+    @ensure_annotations
+    def trainModel(
+        self,
+        model: Model,
+        train_ds: tf.data.Dataset,
+        train_df: pd.DataFrame,
+        valid_ds: tf.data.Dataset,
+        valid_df: pd.DataFrame,
+    ):
+        with self.params.strategy.scope():
+            model = self.buildModel()
+            model.fit(
+                train_ds,
+                epochs=self.params.epochs,
+                validation_data=valid_ds,
+                steps_per_epoch=(len(train_df) // self.params.batch_size),
+                validation_steps=(len(valid_df) // self.params.batch_size),
+            )
