@@ -20,8 +20,8 @@ def read_yaml(path: Path) -> ConfigBox:
         ConfigBox - ConfigBox object
     """
     try:
-        with open(path, r) as file:
-            content = yaml.load(file)
+        with open(path, "r") as file:
+            content = yaml.safe_load(file)
             logger.info(f"YAML file loadded successfully from: {path}")
             return ConfigBox(content)
     except BoxValueError:
@@ -51,7 +51,7 @@ def save_json(path: Path, data: dict):
         path: Path - Path for saving the file
         data: doct - Dictionary object of the JSON
     """
-    with open(path, w) as file:
+    with open(path, "w") as file:
         json.dump(data, file, indent=4)
     logger.info(f"JSON file saved successfully at: {path}")
 

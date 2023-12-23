@@ -17,3 +17,16 @@ logging.basicConfig(
 
 
 logger = logging.getLogger("llm-text-detection-logger")
+
+
+def logflow(func):
+    def wrapper(*args, **kwargs):
+        logger.info(f"Initiated function: {func.__name__}")
+        try:
+            result = func(*args, **kwargs)
+            logger.info(f"{func.__name__} has executed")
+            return result
+        except Exception as e:
+            logger.exception(f"Error in {func.__name__}: {e}")
+
+    return wrapper
