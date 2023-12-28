@@ -37,3 +37,9 @@ class TrainerConfig:
     root_dir: Path
     vectorizer_path: Path
     model_path: Path
+
+
+@dataclass(frozen=True)
+class PredictionConfig:
+    models_root: Path
+    vectorizers_root: Path

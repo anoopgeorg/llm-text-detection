@@ -12,3 +12,7 @@ model_trainer:
     root_dir: artifacts/model_trainer
     vectorizer_path: artifacts/model_trainer/vectorizers
     model_path: artifacts/model_trainer/models
+    
+predictor:
+    models_root: artifacts/model_trainer/models
+    vectorizers_root: artifacts/model_trainer/vectorizers

@@ -9,6 +9,7 @@ from src.llmTextDetection.entity.config_entity import (
     DataIngestionConfig,
     ModelParameters,
     TrainerConfig,
+    PredictionConfig,
 )
 
 
@@ -99,3 +100,11 @@ class configManager:
             vectorizer_path=Path(config.vectorizer_path),
         )
         return trainer_config
+
+    @logflow
+    def getPredictionConfig(self) -> PredictionConfig:
+        config = self.config.predictor
+        predictor_config = PredictionConfig(
+            models_root=config.models_root, vectorizers_root=config.vectorizers_root
+        )
+        return predictor_config
