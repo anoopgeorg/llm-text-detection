@@ -49,8 +49,8 @@ class configManager:
             # Set GPU strategy
             strategy = tf.distribute.MirroredStrategy(gpus)  # single-GPU or multi-GPU
             # Print GPU details
-            logger.info("> Running on GPU", end=" | ")
-            logger.info("Num of GPUs: ", ngpu)
+            logger.info("> Running on GPU")
+            logger.info(f"Num of GPUs:{ngpu} ")
             device = "GPU"
         else:
             # If no GPUs are available, use CPU

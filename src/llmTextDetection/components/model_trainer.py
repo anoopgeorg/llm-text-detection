@@ -62,7 +62,6 @@ class ModelTrainer:
     @ensure_annotations
     def train(
         self,
-        model: Model,
         train_ds: tf.data.Dataset,
         train_df: pd.DataFrame,
         valid_ds: tf.data.Dataset,
@@ -77,10 +76,10 @@ class ModelTrainer:
                 steps_per_epoch=(len(train_df) // self.params.batch_size),
                 validation_steps=(len(valid_df) // self.params.batch_size),
             )
-            return model
+        return model
 
     @logflow
-    @ensure_annotations
+    # @ensure_annotations
     def saveModel(model: Model, path: Path):
         try:
             model.save(str(path))

@@ -3,7 +3,7 @@ import re
 import os
 from ensure import ensure_annotations
 from pathlib import Path
-from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.model_selection import StratifiedKFold
 import tensorflow as tf
 from keras.layers import TextVectorization
 
@@ -58,7 +58,7 @@ class DataIngestion:
             df["stratify"] = df["label"].astype(str) + df["source"].astype(str)
             df["fold"] = 0
 
-            skf = StratifiedGroupKFold(
+            skf = StratifiedKFold(
                 n_splits=self.params.num_folds,
                 random_state=self.params.seed,
                 shuffle=True,
@@ -151,7 +151,9 @@ class DataIngestion:
             output_sequence_length=self.params.max_sequence,
         )
         train_text = tf.data.Dataset.from_tensor_slices(texts)
+        logger.info("====>Vocabulary adaption for training data has started")
         vectorization_layer.adapt(train_text)
+        logger.info("<====Vocabulary adaption for training data has ended")
         return vectorization_layer
 
     @logflow
@@ -190,40 +192,43 @@ class DataIngestion:
     @logflow
     def getDataset(self, fold=None, train=False, df=None, vectorizer=None):
         if train == True:  # create training and validation set
-            # Create the training dataset
-            train_df = df[df["fold"] != fold].sample(frac=1)
-            train_text = train_df["text"].to_list()
-            train_labels = train_df["label"].to_list()
+            if fold in df["fold"].value_counts().index.to_list():
+                # Create the training dataset
+                train_df = df[df["fold"] != fold].sample(frac=1)
+                train_text = train_df["text"].to_list()
+                train_labels = train_df["label"].to_list()
 
-            # Vectorize the text based on training data
-            vectorizer = self.buildVectorizationLayer(train_text, train_df)
+                # Vectorize the text based on training data
+                vectorizer = self.buildVectorizationLayer(train_text, train_df)
 
-            train_ds = self.buildDataset(
-                train_text,
-                train_labels,
-                batch_size=self.params.batch_size,
-                shuffle=True,
-                drop_remainder=True,
-                repeat=True,
-                vectorizer=vectorizer,
-            )
-            # Create the validation dataset
+                train_ds = self.buildDataset(
+                    train_text,
+                    train_labels,
+                    batch_size=self.params.batch_size,
+                    shuffle=True,
+                    drop_remainder=True,
+                    repeat=True,
+                    vectorizer=vectorizer,
+                )
+                # Create the validation dataset
 
-            valid_df = df[df["fold"] == fold].sample(frac=1)
-            valid_text = valid_df["text"].to_list()
-            valid_labels = valid_df["label"].to_list()
+                valid_df = df[df["fold"] == fold].sample(frac=1)
+                valid_text = valid_df["text"].to_list()
+                valid_labels = valid_df["label"].to_list()
 
-            valid_ds = self.buildDataset(
-                valid_text,
-                valid_labels,
-                batch_size=self.params.batch_size,
-                shuffle=False,
-                drop_remainder=True,
-                repeat=False,
-                vectorizer=vectorizer,
-            )
+                valid_ds = self.buildDataset(
+                    valid_text,
+                    valid_labels,
+                    batch_size=self.params.batch_size,
+                    shuffle=False,
+                    drop_remainder=True,
+                    repeat=False,
+                    vectorizer=vectorizer,
+                )
 
-            return (train_ds, train_df), (valid_ds, valid_df), vectorizer
+                return (train_ds, train_df), (valid_ds, valid_df), vectorizer
+            else:
+                logger.info(f"Selected fold:{fold} unavailable in data frame")
         else:  # Create test data set
             if vectorizer is not None:
                 test_text = df["text"].to_list()

@@ -2,7 +2,7 @@ pandas
 nltk
 numpy
 tqdm
-tensorflow
+tensorflow==2.10
 scikit-learn
 xgboost
 spacy
@@ -15,4 +15,5 @@ types-pyYAML
 Flask
 Flask-Cors 
 python-box
+dagshub
 -e .

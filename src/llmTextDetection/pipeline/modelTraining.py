@@ -49,9 +49,8 @@ class ModelTraining:
                 )
                 tf.saved_model.save(vectorizer, vectorizer_file_path)
             # Build and begin model training
-            self.model = self.model_trainer.buildModel()
+            # self.model = self.model_trainer.buildModel()
             self.model = self.model_trainer.train(
-                model=self.model,
                 train_ds=train_ds,
                 train_df=train_df,
                 valid_ds=validation_ds,
@@ -59,6 +58,7 @@ class ModelTraining:
             )
 
             # Save the model for future
-            self.model_trainer.saveModel(
-                model=self.model, path=self.train_config.model_path
-            )
+            # self.model_trainer.saveModel(
+            #     model=self.model, path=self.train_config.model_path
+            # )
+            self.model.save(str(self.train_config.model_path / self.runid))
