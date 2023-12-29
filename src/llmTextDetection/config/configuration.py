@@ -10,6 +10,7 @@ from src.llmTextDetection.entity.config_entity import (
     ModelParameters,
     TrainerConfig,
     PredictionConfig,
+    EvaluationConfig,
 )
 
 
@@ -30,6 +31,7 @@ class configManager:
                 self.config.data_ingestion.root_dir,
                 self.config.data_ingestion.train_data_path,
                 self.config.data_ingestion.test_data_path,
+                self.config.data_ingestion.pre_processing_path,
             ]
         )
         data_ingestion_config = DataIngestionConfig(
@@ -38,6 +40,7 @@ class configManager:
             test_data_path=config.test_data_path,
             raw_train_data_path=config.raw_train_data_path,
             raw_test_data_path=config.raw_test_data_path,
+            pre_processing_path=Path(config.pre_processing_path),
         )
         return data_ingestion_config
 
@@ -105,6 +108,22 @@ class configManager:
     def getPredictionConfig(self) -> PredictionConfig:
         config = self.config.predictor
         predictor_config = PredictionConfig(
-            models_root=config.models_root, vectorizers_root=config.vectorizers_root
+            models_root=Path(config.models_root),
+            vectorizers_root=Path(config.vectorizers_root),
         )
         return predictor_config
+
+    @logflow
+    def getEvaluationConfig(self) -> EvaluationConfig:
+        config = self.config.evaluator
+        create_directory(
+            [
+                config.root,
+            ]
+        )
+        evaluator_config = EvaluationConfig(
+            root=Path(config.root),
+            ml_flow_uri=config.ml_flow_uri,
+            all_params=self.params,
+        )
+        return evaluator_config

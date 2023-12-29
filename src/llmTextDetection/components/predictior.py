@@ -1,10 +1,14 @@
 from src.llmTextDetection import logger, logflow
 from src.llmTextDetection.entity.config_entity import PredictionConfig
+from src.llmTextDetection.utils.common import find_latest_file, loadPickle
 
 from pathlib import Path
 from ensure import ensure_annotations
 import tensorflow as tf
-from tensorflow.keras.models import load_model
+from keras.models import load_model
+from keras.optimizers import Adam
+from keras.losses import binary_crossentropy
+from keras.metrics import AUC
 
 
 class ModelPredictor:
@@ -12,18 +16,13 @@ class ModelPredictor:
         self,
         prediction_config: PredictionConfig,
         model_path: Path = None,
-        vectorizer_path: Path = None,
+        vectorizer=None,
     ):
         self.prediction_config = prediction_config
-        self.model_path = (
-            model_path if model_path is not None else prediction_config.models_root
-        )
-        self.vectorizer_path = (
-            vectorizer_path
-            if vectorizer_path is not None
-            else prediction_config.vectorizers_root
-        )
+        self.model = None
+        self.model_path = model_path
         self.model = self.loadModel()
+        self.vectorizer = vectorizer
         logger.info("ModelPredictor instance has be instantiated")
 
     @logflow
@@ -31,11 +30,30 @@ class ModelPredictor:
     def loadModel(self):
         if self.model_path is not None:
             model = load_model(str(self.model_path))
+        else:
+            model = load_model(
+                str(find_latest_file(self.prediction_config.models_root))
+            )
+        # print("XXXXXXXXX Check this" * 3)
+        model.summary()
+        model.compile(
+            optimizer=Adam(), loss=binary_crossentropy, metrics=[AUC(name="auc")]
+        )
         return model
 
-    @logflow
-    @ensure_annotations
-    def loadVectorizer(self):
-        if self.vectorizer_path is not None:
-            vectorizer = tf.saved_model.load(str(self.vectorizer_path))
-        return vectorizer
+    # @logflow
+    # @ensure_annotations
+    # def loadVectorizer(self):
+    #     if self.vectorizer_path is not None:
+    #         vectorizer = load_model(str(self.vectorizer_path))
+    #         # obj = loadPickle(str(self.vectorizer_path))
+    #         # vectorizer = TextVectorization.from_config(obj["config"])
+    #         # vectorizer.set_weights(obj["weights"])
+    #     else:
+    #         vectorizer = load_model(
+    #             str(find_latest_file(self.prediction_config.vectorizers_root))
+    #         )
+    #         # obj = loadPickle(str(find_latest_file(self.prediction_config.models_root)))
+    #         # vectorizer = TextVectorization.from_config(obj["config"])
+    #         # vectorizer.set_weights(obj["weights"])
+    #     return vectorizer

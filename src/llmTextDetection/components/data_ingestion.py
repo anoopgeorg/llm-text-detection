@@ -1,6 +1,9 @@
 import pandas as pd
 import re
 import os
+import gc
+from keras.models import load_model
+from src.llmTextDetection.utils.common import find_latest_file
 from ensure import ensure_annotations
 from pathlib import Path
 from sklearn.model_selection import StratifiedKFold
@@ -9,16 +12,26 @@ from keras.layers import TextVectorization
 
 
 from src.llmTextDetection import logger, logflow
+from src.llmTextDetection.utils.common import savePickle, loadPickle
 from src.llmTextDetection.entity.config_entity import (
     DataIngestionConfig,
     ModelParameters,
+    PredictionConfig,
 )
 
 
 class DataIngestion:
-    def __init__(self, config: DataIngestionConfig, params: ModelParameters):
+    def __init__(
+        self,
+        config: DataIngestionConfig,
+        params: ModelParameters,
+        pred_config: PredictionConfig,
+        vectorizer_path: Path = None,
+    ):
         self.config = config
         self.params = params
+        self.pred_config = pred_config
+        self.vectorizer_path = vectorizer_path
         logger.info("DataIngestion object initialized")
 
     @logflow
@@ -143,18 +156,52 @@ class DataIngestion:
             self.regex_pattern,
             self.html_exclude,
         ) = self.getRegexExclusions(df)
+        preprocess_artifacts = {
+            "char_excl_regex": self.char_excl_regex,
+            "regex_pattern": self.regex_pattern,
+            "html_exclude": self.html_exclude,
+        }
+        save_path = str(self.config.pre_processing_path / "regex_patterns.pkl")
+        savePickle(
+            obj=preprocess_artifacts,
+            path=save_path,
+        )
 
+        # tf.keras.utils.get_custom_objects()["standardizeText"] = self.standardizeText
         vectorization_layer = TextVectorization(
-            standardize=self.standardizeText,
+            # standardize="standardizeText",
             max_tokens=self.params.max_tokens,
             output_mode="int",
             output_sequence_length=self.params.max_sequence,
+            input_shape=(1,),
         )
         train_text = tf.data.Dataset.from_tensor_slices(texts)
+
+        logger.info("====>text preprocess started for training data has started")
+        processed_text = train_text.map(self.standardizeText)
+        logger.info("====>text preprocess started for training data has ended")
         logger.info("====>Vocabulary adaption for training data has started")
-        vectorization_layer.adapt(train_text)
+        vectorization_layer.adapt(processed_text)
         logger.info("<====Vocabulary adaption for training data has ended")
-        return vectorization_layer
+        # refactor
+        vectorizer_model = tf.keras.models.Sequential([vectorization_layer])
+        vectorizer_model(tf.constant(["test"], dtype=tf.string))
+        vectorizer_model.summary()
+        vectorizer_model.compile()
+        del vectorization_layer
+        gc.collect()
+        # return vectorization_layer
+        return vectorizer_model
+
+    def loadVectorizer(self):
+        # tf.keras.utils.get_custom_objects()["standardizeText"] = self.standardizeText
+        path = (
+            str(self.vectorizer_path)
+            if self.vectorizer_path is not None
+            else str(find_latest_file(self.pred_config.vectorizers_root))
+        )
+        vectorizer = load_model(path)
+        return vectorizer
 
     @logflow
     @ensure_annotations
@@ -167,6 +214,7 @@ class DataIngestion:
         drop_remainder=True,
         repeat=False,
         vectorizer=None,
+        pre_process=False,
     ):
         AUTO = tf.data.AUTOTUNE
         slices = (texts) if labels is None else (texts, labels)
@@ -177,6 +225,19 @@ class DataIngestion:
             texts = vectorizer(texts)
             return (texts) if labels is None else (texts, labels)
 
+        if pre_process:
+            regex_patterns = loadPickle(
+                str(self.config.pre_processing_path / "regex_patterns.pkl")
+            )
+            (self.char_excl_regex, self.regex_pattern, self.html_exclude) = (
+                regex_patterns["char_excl_regex"],
+                regex_patterns["regex_pattern"],
+                regex_patterns["html_exclude"],
+            )
+
+            logger.info("====>text preprocess started for training data has started")
+            ds = ds.map(self.standardizeText, num_parallel_calls=AUTO)
+            logger.info("====>text preprocess started for training data has ended")
         ds = ds.map(vectorizeText, num_parallel_calls=AUTO)
 
         ds = ds.repeat() if repeat else ds
@@ -231,9 +292,8 @@ class DataIngestion:
                 logger.info(f"Selected fold:{fold} unavailable in data frame")
         else:  # Create test data set
             if vectorizer is not None:
-                test_text = df["text"].to_list()
+                test_text = df["text"].astype("str").to_list()
                 # Vectorize the text based on training data
-                #         vectorizer = buildVectorizationLayer(test_text) # Create the vectorization layer
                 test_ds = self.buildDataset(
                     test_text,
                     None,
@@ -242,5 +302,6 @@ class DataIngestion:
                     drop_remainder=False,
                     repeat=False,
                     vectorizer=vectorizer,
+                    pre_process=True,
                 )
                 return test_ds

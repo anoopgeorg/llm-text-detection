@@ -39,6 +39,14 @@ def savePickle(obj, path):
         return True
 
 
+@logflow
+def loadPickle(path):
+    # load the object using pickle.dump
+    with open(path, "rb") as file:
+        obj = pickle.load(file)
+        return obj
+
+
 @ensure_annotations
 def create_directory(dir_list: list, verbose=True):
     """
@@ -76,3 +84,23 @@ def load_json(path: Path) -> ConfigBox:
         content = json.load(file)
     logger.info(f"JSON file loadded successfully from: {path}")
     return ConfigBox(content)
+
+
+@logflow
+@ensure_annotations
+def find_latest_file(directory: Path) -> Path:
+    # Ensure the path points to a directory
+    if not directory.is_dir():
+        raise ValueError(f"{directory} is not a valid directory path.")
+
+    # Get all files in the directory
+    files = [file for file in directory.iterdir()]
+
+    # If there are no files, return None
+    if not files:
+        return None
+
+    # Find the latest file based on modification time
+    latest_file = max(files, key=lambda file: file.stat().st_mtime)
+
+    return latest_file
