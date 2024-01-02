@@ -1,4 +1,5 @@
 pandas
+dvc
 nltk
 numpy
 tqdm

@@ -73,6 +73,29 @@ def save_json(path: Path, data: dict):
     logger.info(f"JSON file saved successfully at: {path}")
 
 
+def save_score(path: Path, data: dict):
+    """
+    Saves scores.JSON
+    Args:
+        path: Path - Path for saving the file
+        data: dict - Dictionary object of the JSON
+    """
+    if path.exists():
+        # If the file exists, load its content
+        with open(path, "r") as file:
+            existing_data = json.load(file)
+
+        # Update the existing data with the new data
+        existing_data.update(data)
+        data = existing_data
+
+    # Save the updated data to the file
+    with open(path, "w") as file:
+        json.dump(data, file, indent=4)
+
+    logger.info(f"JSON file saved successfully at: {path}")
+
+
 @ensure_annotations
 def load_json(path: Path) -> ConfigBox:
     """

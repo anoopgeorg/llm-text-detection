@@ -65,7 +65,7 @@ class configManager:
 
     @logflow
     def getModelParameters(self) -> ModelParameters:
-        params = self.params.model_paramerters
+        params = self.params
         classes = list(range(params.num_classes))
         strategy, device = self.getDevice()
         model_parameters = ModelParameters(
@@ -126,7 +126,8 @@ class configManager:
             ml_flow_uri=config.ml_flow_uri,
             ml_flow_uname=config.ml_flow_uname,
             ml_flow_pass=config.ml_flow_pass,
-            all_params=self.params.model_paramerters,
+            all_params=self.params,
+            scores_file=config.scores_file,
             eval_model_path=Path(config.eval_model_path),
         )
         return evaluator_config

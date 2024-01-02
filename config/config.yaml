@@ -19,7 +19,8 @@ predictor:
     vectorizers_root: artifacts/model_trainer/vectorizers
 
 evaluator:
-    root: artifacts/evaluator/scores
+    root: artifacts/evaluator
+    scores_file: artifacts/evaluator/scores.json
     ml_flow_uri: https://dagshub.com/anoopgeorg/llm-text-detection.mlflow
     ml_flow_uname: anoopgeorg
     ml_flow_pass: 

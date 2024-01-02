@@ -49,6 +49,7 @@ class PredictionConfig:
 @dataclass(frozen=True)
 class EvaluationConfig:
     root: Path
+    scores_file: Path
     ml_flow_uri: str
     ml_flow_uname: str
     ml_flow_pass: str

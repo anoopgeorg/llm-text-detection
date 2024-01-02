@@ -1,6 +1,6 @@
 from src.llmTextDetection import logger, logflow
 from src.llmTextDetection.entity.config_entity import EvaluationConfig
-from src.llmTextDetection.utils.common import save_json
+from src.llmTextDetection.utils.common import save_score
 
 import os
 import mlflow
@@ -25,8 +25,11 @@ class ModelEvaluator:
         if test_ds is not None:
             evaluation = model.evaluate(test_ds)
             self.model = model
-            self.scores = {"loss": evaluation[0], "AUC": evaluation[1]}
-            save_json(path=Path(self.eval_config.root / self.testid), data=self.scores)
+            self.scores = {self.testid: {"loss": evaluation[0], "AUC": evaluation[1]}}
+            save_score(
+                path=Path(self.eval_config.scores_file),
+                data=self.scores,
+            )
 
     @logflow
     def logToMlflow(self):
@@ -44,7 +47,7 @@ class ModelEvaluator:
 
         with mlflow.start_run():
             mlflow.log_params(self.eval_config.all_params)
-            mlflow.log_metrics(self.scores)
+            mlflow.log_metrics(self.scores[self.testid])
 
             artifact_path = str(self.eval_config.eval_model_path)
             if tracking_url_type_store != "file":

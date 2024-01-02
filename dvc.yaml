@@ -1,0 +1,33 @@
+stages:
+  training:
+    cmd: python src/llmTextDetection/pipeline/modelTraining.py
+    deps:
+      - src/llmTextDetection/pipeline/modelTraining.py
+      - config/config.yaml
+      - src/llmTextDetection/data/train
+    params:
+      - class_names
+      - num_classes
+      - num_folds
+      - seed
+      - max_sequence
+      - max_tokens
+      - batch_size
+      - selected_folds
+      - ml_lr
+      - embd_dim
+      - epochs
+    outs:
+      - artifacts/model_trainer/models
+      - artifacts/model_trainer/models
+  evaluation:
+    cmd: python src/llmTextDetection/pipeline/eveluation_pipeline.py
+    deps:
+      - src/llmTextDetection/pipeline/eveluation_pipeline.py
+      - config/config.yaml
+      - artifacts/model_trainer/models
+      - artifacts/model_trainer/models
+      - src/llmTextDetection/data/test
+    metrics:
+    - artifacts/evaluator/scores.json:
+        cache: false
