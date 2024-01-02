@@ -214,7 +214,7 @@ class DataIngestion:
         drop_remainder=True,
         repeat=False,
         vectorizer=None,
-        pre_process=False,
+        # pre_process=False,
     ):
         AUTO = tf.data.AUTOTUNE
         slices = (texts) if labels is None else (texts, labels)
@@ -225,19 +225,66 @@ class DataIngestion:
             texts = vectorizer(texts)
             return (texts) if labels is None else (texts, labels)
 
-        if pre_process:
-            regex_patterns = loadPickle(
-                str(self.config.pre_processing_path / "regex_patterns.pkl")
-            )
-            (self.char_excl_regex, self.regex_pattern, self.html_exclude) = (
-                regex_patterns["char_excl_regex"],
-                regex_patterns["regex_pattern"],
-                regex_patterns["html_exclude"],
-            )
+        # if pre_process:
+        #     regex_patterns = loadPickle(
+        #         str(self.config.pre_processing_path / "regex_patterns.pkl")
+        #     )
+        #     (self.char_excl_regex, self.regex_pattern, self.html_exclude) = (
+        #         regex_patterns["char_excl_regex"],
+        #         regex_patterns["regex_pattern"],
+        #         regex_patterns["html_exclude"],
+        #     )
 
-            logger.info("====>text preprocess started for training data has started")
-            ds = ds.map(self.standardizeText, num_parallel_calls=AUTO)
-            logger.info("====>text preprocess started for training data has ended")
+        #     logger.info("====>text preprocess started for training data has started")
+        #     ds = ds.map(self.standardizeText, num_parallel_calls=AUTO)
+        #     logger.info("====>text preprocess started for training data has ended")
+        ds = ds.map(vectorizeText, num_parallel_calls=AUTO)
+
+        ds = ds.repeat() if repeat else ds
+        opt = tf.data.Options()
+        if shuffle:
+            ds = ds.shuffle(shuffle, seed=self.params.seed)
+            opt.experimental_deterministic = False
+        ds = ds.with_options(opt)
+        ds = ds.batch(batch_size, drop_remainder=drop_remainder)
+        ds = ds.prefetch(AUTO)
+        return ds
+
+    def buildTestDataset(
+        self,
+        texts,
+        labels=None,
+        batch_size=32,
+        shuffle=False,
+        drop_remainder=True,
+        repeat=False,
+        vectorizer=None,
+    ):
+        AUTO = tf.data.AUTOTUNE
+        texts = tf.data.Dataset.from_tensor_slices((texts))
+        labels = tf.data.Dataset.from_tensor_slices((labels))
+        regex_patterns = loadPickle(
+            str(self.config.pre_processing_path / "regex_patterns.pkl")
+        )
+        (self.char_excl_regex, self.regex_pattern, self.html_exclude) = (
+            regex_patterns["char_excl_regex"],
+            regex_patterns["regex_pattern"],
+            regex_patterns["html_exclude"],
+        )
+
+        logger.info("====>text preprocess started for training data has started")
+        texts = texts.map(self.standardizeText, num_parallel_calls=AUTO)
+        logger.info("====>text preprocess started for training data has ended")
+
+        # slices = (texts) if labels is None else (texts, labels)
+        # ds = tf.data.Dataset.from_tensor_slices(slices)
+        ds = texts if labels is None else tf.data.Dataset.zip((texts, labels))
+
+        # Vectorization function
+        def vectorizeText(texts, labels=None):
+            texts = vectorizer(texts)
+            return (texts) if labels is None else (texts, labels)
+
         ds = ds.map(vectorizeText, num_parallel_calls=AUTO)
 
         ds = ds.repeat() if repeat else ds
@@ -293,15 +340,25 @@ class DataIngestion:
         else:  # Create test data set
             if vectorizer is not None:
                 test_text = df["text"].astype("str").to_list()
+                test_labels = df["label"].to_list()
                 # Vectorize the text based on training data
-                test_ds = self.buildDataset(
+                # test_ds = self.buildDataset(
+                #     test_text,
+                #     test_labels,
+                #     batch_size=self.params.batch_size,
+                #     shuffle=False,
+                #     drop_remainder=False,
+                #     repeat=False,
+                #     vectorizer=vectorizer,
+                #     # pre_process=True,
+                # )
+                test_ds = self.buildTestDataset(
                     test_text,
-                    None,
+                    test_labels,
                     batch_size=self.params.batch_size,
                     shuffle=False,
                     drop_remainder=False,
                     repeat=False,
                     vectorizer=vectorizer,
-                    pre_process=True,
                 )
                 return test_ds

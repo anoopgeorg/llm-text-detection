@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/ANOOP/Desktop/Python/ai-porfolio/llm-text-detection/mlruns/0/6ba8965c73c447e5a5450c7a2a54d804/artifacts
+end_time: 1704008640866
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 6ba8965c73c447e5a5450c7a2a54d804
+run_name: kindly-wren-180
+run_uuid: 6ba8965c73c447e5a5450c7a2a54d804
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1704008630500
+status: 4
+tags: []
+user_id: ANOOP

@@ -124,6 +124,9 @@ class configManager:
         evaluator_config = EvaluationConfig(
             root=Path(config.root),
             ml_flow_uri=config.ml_flow_uri,
-            all_params=self.params,
+            ml_flow_uname=config.ml_flow_uname,
+            ml_flow_pass=config.ml_flow_pass,
+            all_params=self.params.model_paramerters,
+            eval_model_path=Path(config.eval_model_path),
         )
         return evaluator_config

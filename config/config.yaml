@@ -21,3 +21,6 @@ predictor:
 evaluator:
     root: artifacts/evaluator/scores
     ml_flow_uri: https://dagshub.com/anoopgeorg/llm-text-detection.mlflow
+    ml_flow_uname: anoopgeorg
+    ml_flow_pass: 
+    eval_model_path: artifacts/evaluator/models

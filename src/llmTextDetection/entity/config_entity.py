@@ -50,4 +50,7 @@ class PredictionConfig:
 class EvaluationConfig:
     root: Path
     ml_flow_uri: str
+    ml_flow_uname: str
+    ml_flow_pass: str
     all_params: dict
+    eval_model_path: Path
