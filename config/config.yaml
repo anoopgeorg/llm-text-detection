@@ -8,6 +8,7 @@ data_ingestion:
   raw_train_data_path: src/llmTextDetection/data/train
   raw_test_data_path: src/llmTextDetection/data/test
   pre_processing_path: artifacts/data_ingestion/pre_processing
+  default_pre_process: src/llmTextDetection/stable/pre_process.pkl
 
 model_trainer:
     root_dir: artifacts/model_trainer
@@ -17,11 +18,13 @@ model_trainer:
 predictor:
     models_root: artifacts/model_trainer/models
     vectorizers_root: artifacts/model_trainer/vectorizers
+    default_model: src/llmTextDetection/stable/model/default
+    default_vectorizer: src/llmTextDetection/stable/vectorizer/default
 
 evaluator:
     root: artifacts/evaluator
     scores_file: artifacts/evaluator/scores.json
     ml_flow_uri: https://dagshub.com/anoopgeorg/llm-text-detection.mlflow
     ml_flow_uname: anoopgeorg
-    ml_flow_pass: 
+    ml_flow_pass: cef2c2bef7e44c4c3f597eab6bf9c326b6b37f0c
     eval_model_path: artifacts/evaluator/models

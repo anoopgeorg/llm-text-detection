@@ -12,6 +12,7 @@ class DataIngestionConfig:
     raw_train_data_path: Path
     raw_test_data_path: Path
     pre_processing_path: Path
+    default_pre_process: Path
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,8 @@ class TrainerConfig:
 class PredictionConfig:
     models_root: Path
     vectorizers_root: Path
+    default_model: Path
+    default_vectorizer: Path
 
 
 @dataclass(frozen=True)

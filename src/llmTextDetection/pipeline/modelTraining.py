@@ -77,6 +77,7 @@ class ModelTraining:
             # export_model.save(str(self.train_config.model_path / self.runid))
             del self.model
             del vectorizer
+            del train_ds, train_df, validation_ds, validation_df
             # del export_model
             gc.collect()
 

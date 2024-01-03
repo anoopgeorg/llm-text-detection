@@ -131,39 +131,48 @@ class DataIngestion:
         # Regex pattern for excluding html tags
         html_exclude = re.compile(r"<.*?>")
         html_pattern = html_exclude.pattern
-
-        return (char_excl_regex, regex_pattern, html_pattern)
+        preprocess_artifacts = {
+            "char_excl_regex": char_excl_regex,
+            "regex_pattern": regex_pattern,
+            "html_exclude": html_pattern,
+        }
+        return preprocess_artifacts
 
     def standardizeText(self, input_data):
-        if (
-            self.regex_pattern is not None
-            and self.html_exclude is not None
-            and self.html_exclude is not None
-        ):
-            data = tf.strings.lower(input_data)
-            data = tf.strings.regex_replace(data, self.regex_pattern, "")
-            data = tf.strings.regex_replace(data, self.html_exclude, "")
-            data = tf.strings.regex_replace(data, self.char_excl_regex, "")
-            return data
+        # if (
+        #     self.regex_pattern is not None
+        #     and self.html_exclude is not None
+        #     and self.html_exclude is not None
+        # ):
+        #     data = tf.strings.lower(input_data)
+        #     data = tf.strings.regex_replace(data, self.regex_pattern, "")
+        #     data = tf.strings.regex_replace(data, self.html_exclude, "")
+        #     data = tf.strings.regex_replace(data, self.char_excl_regex, "")
+        #     return data
+        data = tf.strings.lower(input_data)
+        for i, pattern in self.regex_patterns.items():
+            data = tf.strings.regex_replace(data, pattern, "")
+        return data
 
     @logflow
     @ensure_annotations
     # Preprocessing and vectorization of text
     def buildVectorizationLayer(self, texts: list, df: pd.DataFrame):
         # Get Regex patterns
-        (
-            self.char_excl_regex,
-            self.regex_pattern,
-            self.html_exclude,
-        ) = self.getRegexExclusions(df)
-        preprocess_artifacts = {
-            "char_excl_regex": self.char_excl_regex,
-            "regex_pattern": self.regex_pattern,
-            "html_exclude": self.html_exclude,
-        }
+        # (
+        #     self.char_excl_regex,
+        #     self.regex_pattern,
+        #     self.html_exclude,
+        # ) = self.getRegexExclusions(df)
+        self.regex_patterns = self.getRegexExclusions(df)
+        # preprocess_artifacts = {
+        #     "char_excl_regex": self.char_excl_regex,
+        #     "regex_pattern": self.regex_pattern,
+        #     "html_exclude": self.html_exclude,
+        # }
         save_path = str(self.config.pre_processing_path / "regex_patterns.pkl")
         savePickle(
-            obj=preprocess_artifacts,
+            obj=self.regex_patterns,
             path=save_path,
         )
 
@@ -262,15 +271,18 @@ class DataIngestion:
     ):
         AUTO = tf.data.AUTOTUNE
         texts = tf.data.Dataset.from_tensor_slices((texts))
-        labels = tf.data.Dataset.from_tensor_slices((labels))
-        regex_patterns = loadPickle(
-            str(self.config.pre_processing_path / "regex_patterns.pkl")
-        )
-        (self.char_excl_regex, self.regex_pattern, self.html_exclude) = (
-            regex_patterns["char_excl_regex"],
-            regex_patterns["regex_pattern"],
-            regex_patterns["html_exclude"],
-        )
+        if labels is not None:
+            labels = tf.data.Dataset.from_tensor_slices((labels))
+
+        # Load regex patterns
+        pattern_path = Path(self.config.pre_processing_path / "regex_patterns.pkl")
+        if pattern_path.exists():
+            load_path = str(pattern_path)
+        else:
+            load_path = str(self.config.default_pre_process)
+
+        regex_patterns = loadPickle(path=load_path)
+        self.regex_patterns = regex_patterns
 
         logger.info("====>text preprocess started for training data has started")
         texts = texts.map(self.standardizeText, num_parallel_calls=AUTO)
@@ -340,7 +352,10 @@ class DataIngestion:
         else:  # Create test data set
             if vectorizer is not None:
                 test_text = df["text"].astype("str").to_list()
-                test_labels = df["label"].to_list()
+                if "label" in df.columns.to_list():
+                    test_labels = df["label"].to_list()
+                else:
+                    test_labels = None
                 # Vectorize the text based on training data
                 # test_ds = self.buildDataset(
                 #     test_text,

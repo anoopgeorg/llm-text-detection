@@ -80,7 +80,8 @@ def save_score(path: Path, data: dict):
         path: Path - Path for saving the file
         data: dict - Dictionary object of the JSON
     """
-    if path.exists():
+
+    if path.is_file():
         # If the file exists, load its content
         with open(path, "r") as file:
             existing_data = json.load(file)
@@ -88,6 +89,8 @@ def save_score(path: Path, data: dict):
         # Update the existing data with the new data
         existing_data.update(data)
         data = existing_data
+    else:
+        path.touch(exist_ok=True)
 
     # Save the updated data to the file
     with open(path, "w") as file:
