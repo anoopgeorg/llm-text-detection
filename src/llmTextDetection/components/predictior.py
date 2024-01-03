@@ -40,20 +40,3 @@ class ModelPredictor:
             optimizer=Adam(), loss=binary_crossentropy, metrics=[AUC(name="auc")]
         )
         return model
-
-    # @logflow
-    # @ensure_annotations
-    # def loadVectorizer(self):
-    #     if self.vectorizer_path is not None:
-    #         vectorizer = load_model(str(self.vectorizer_path))
-    #         # obj = loadPickle(str(self.vectorizer_path))
-    #         # vectorizer = TextVectorization.from_config(obj["config"])
-    #         # vectorizer.set_weights(obj["weights"])
-    #     else:
-    #         vectorizer = load_model(
-    #             str(find_latest_file(self.prediction_config.vectorizers_root))
-    #         )
-    #         # obj = loadPickle(str(find_latest_file(self.prediction_config.models_root)))
-    #         # vectorizer = TextVectorization.from_config(obj["config"])
-    #         # vectorizer.set_weights(obj["weights"])
-    #     return vectorizer

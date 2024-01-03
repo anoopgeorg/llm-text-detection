@@ -139,16 +139,6 @@ class DataIngestion:
         return preprocess_artifacts
 
     def standardizeText(self, input_data):
-        # if (
-        #     self.regex_pattern is not None
-        #     and self.html_exclude is not None
-        #     and self.html_exclude is not None
-        # ):
-        #     data = tf.strings.lower(input_data)
-        #     data = tf.strings.regex_replace(data, self.regex_pattern, "")
-        #     data = tf.strings.regex_replace(data, self.html_exclude, "")
-        #     data = tf.strings.regex_replace(data, self.char_excl_regex, "")
-        #     return data
         data = tf.strings.lower(input_data)
         for i, pattern in self.regex_patterns.items():
             data = tf.strings.regex_replace(data, pattern, "")
@@ -159,24 +149,15 @@ class DataIngestion:
     # Preprocessing and vectorization of text
     def buildVectorizationLayer(self, texts: list, df: pd.DataFrame):
         # Get Regex patterns
-        # (
-        #     self.char_excl_regex,
-        #     self.regex_pattern,
-        #     self.html_exclude,
-        # ) = self.getRegexExclusions(df)
+
         self.regex_patterns = self.getRegexExclusions(df)
-        # preprocess_artifacts = {
-        #     "char_excl_regex": self.char_excl_regex,
-        #     "regex_pattern": self.regex_pattern,
-        #     "html_exclude": self.html_exclude,
-        # }
+
         save_path = str(self.config.pre_processing_path / "regex_patterns.pkl")
         savePickle(
             obj=self.regex_patterns,
             path=save_path,
         )
 
-        # tf.keras.utils.get_custom_objects()["standardizeText"] = self.standardizeText
         vectorization_layer = TextVectorization(
             # standardize="standardizeText",
             max_tokens=self.params.max_tokens,
@@ -203,7 +184,6 @@ class DataIngestion:
         return vectorizer_model
 
     def loadVectorizer(self):
-        # tf.keras.utils.get_custom_objects()["standardizeText"] = self.standardizeText
         path = (
             str(self.vectorizer_path)
             if self.vectorizer_path is not None
@@ -234,19 +214,6 @@ class DataIngestion:
             texts = vectorizer(texts)
             return (texts) if labels is None else (texts, labels)
 
-        # if pre_process:
-        #     regex_patterns = loadPickle(
-        #         str(self.config.pre_processing_path / "regex_patterns.pkl")
-        #     )
-        #     (self.char_excl_regex, self.regex_pattern, self.html_exclude) = (
-        #         regex_patterns["char_excl_regex"],
-        #         regex_patterns["regex_pattern"],
-        #         regex_patterns["html_exclude"],
-        #     )
-
-        #     logger.info("====>text preprocess started for training data has started")
-        #     ds = ds.map(self.standardizeText, num_parallel_calls=AUTO)
-        #     logger.info("====>text preprocess started for training data has ended")
         ds = ds.map(vectorizeText, num_parallel_calls=AUTO)
 
         ds = ds.repeat() if repeat else ds
@@ -288,8 +255,6 @@ class DataIngestion:
         texts = texts.map(self.standardizeText, num_parallel_calls=AUTO)
         logger.info("====>text preprocess started for training data has ended")
 
-        # slices = (texts) if labels is None else (texts, labels)
-        # ds = tf.data.Dataset.from_tensor_slices(slices)
         ds = texts if labels is None else tf.data.Dataset.zip((texts, labels))
 
         # Vectorization function
@@ -356,17 +321,6 @@ class DataIngestion:
                     test_labels = df["label"].to_list()
                 else:
                     test_labels = None
-                # Vectorize the text based on training data
-                # test_ds = self.buildDataset(
-                #     test_text,
-                #     test_labels,
-                #     batch_size=self.params.batch_size,
-                #     shuffle=False,
-                #     drop_remainder=False,
-                #     repeat=False,
-                #     vectorizer=vectorizer,
-                #     # pre_process=True,
-                # )
                 test_ds = self.buildTestDataset(
                     test_text,
                     test_labels,

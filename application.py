@@ -51,23 +51,6 @@ def train():
     return render_template("<h1>Training Completed Successfully!</h1>")
 
 
-# @logflow
-# @application.route("/predict", methods=["POST"])
-# @cross_origin()
-# def predict():
-#     if request.method == "POST":
-#         essay_input = request.form.get("essayInput")
-#         data = {"text": [essay_input]}
-#         df = pd.DataFrame(data)
-#         prediction = web_app.predictor.makePrediction(test_df=df).flatten()
-#         if prediction[0] > 0.8:
-#             result = "AI"
-#         else:
-#             result = "Human"
-
-#         return render_template("index.html", prediction_result=result)
-
-
 if __name__ == "__main__":
     web_app = WebInstance()
     application.run(host="0.0.0.0", port=8080)

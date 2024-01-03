@@ -42,39 +42,17 @@ class ModelTraining:
                 vectorizer_file_path = self.train_config.vectorizer_path / str(
                     self.runid
                 )
-                # refactor
                 vectorizer.save(filepath=str(vectorizer_file_path))
 
-                # save_model(model=vectorizer, filepath=str(vectorizer_file_path))
-                # vectorizer.save(str(vectorizer_file_path))
-                # tf.saved_model.save(vectorizer, vectorizer_file_path)
-
-                # print("------------++++++++++++||||||||||")
-                # print(vectorizer("this"))
-                # vectorizer_obj = {
-                #     "config": vectorizer.get_config(),
-                #     "weights": vectorizer.get_weights(),
-                # }
-                # savePickle(vectorizer_obj, vectorizer_file_path)
             # Build and begin model training
-            # self.model = self.model_trainer.buildModel()
             self.model = self.model_trainer.train(
                 train_ds=train_ds,
                 train_df=train_df,
                 valid_ds=validation_ds,
                 valid_df=validation_df,
             )
-            # export_model = tf.keras.Sequential(
-            #     [vectorizer, self.model, layers.Activation("sigmoid")]
-            # )
-
-            # export_model.compile(
-            #     optimizer=Adam(), loss=binary_crossentropy, metrics=[AUC(name="auc")]
-            # )
             # Save the model for future
             self.model.save(str(self.train_config.model_path / self.runid))
-            # export_model.predict(["This is a dummy test"])
-            # export_model.save(str(self.train_config.model_path / self.runid))
             del self.model
             del vectorizer
             del train_ds, train_df, validation_ds, validation_df
